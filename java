@@ -1,97 +1,181 @@
-This XML file does not appear to have any style information associated with it. The document tree is shown below.
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
-<modelVersion>4.0.0</modelVersion>
-<parent>
-<groupId>org.springframework.boot</groupId>
-<artifactId>spring-boot-starter-parent</artifactId>
-<version>2.6.6</version>
-<relativePath/>
-<!--  lookup parent from repository  -->
-</parent>
-<groupId>com.crni99</groupId>
-<artifactId>bookstore</artifactId>
-<version>0.0.1-SNAPSHOT</version>
-<name>Book Store</name>
-<description>Java Spring MVC Hibernate</description>
-<properties>
-<java.version>11</java.version>
-</properties>
-<dependencies>
-<dependency>
-<groupId>org.springframework.boot</groupId>
-<artifactId>spring-boot-starter-web</artifactId>
-</dependency>
-<dependency>
-<groupId>org.springframework.boot</groupId>
-<artifactId>spring-boot-starter-data-jpa</artifactId>
-</dependency>
-<!--  Spring Thymeleaf  -->
-<dependency>
-<groupId>org.springframework.boot</groupId>
-<artifactId>spring-boot-starter-thymeleaf</artifactId>
-</dependency>
-<!--  Spring Security  -->
-<dependency>
-<groupId>org.springframework.security</groupId>
-<artifactId>spring-security-web</artifactId>
-<version>5.6.2</version>
-</dependency>
-<dependency>
-<groupId>org.springframework.security</groupId>
-<artifactId>spring-security-config</artifactId>
-<version>5.6.2</version>
-</dependency>
-<!--  MySQL Connector  -->
-<dependency>
-<groupId>mysql</groupId>
-<artifactId>mysql-connector-java</artifactId>
-<scope>runtime</scope>
-</dependency>
-<!--  H2 DB AND C3POOL  -->
-<dependency>
-<groupId>com.h2database</groupId>
-<artifactId>h2</artifactId>
-<scope>runtime</scope>
-</dependency>
-<dependency>
-<groupId>com.mchange</groupId>
-<artifactId>c3p0</artifactId>
-<version>0.9.5.2</version>
-</dependency>
-<!--  Validation  -->
-<dependency>
-<groupId>org.springframework.boot</groupId>
-<artifactId>spring-boot-starter-validation</artifactId>
-</dependency>
-<dependency>
-<groupId>javax.validation</groupId>
-<artifactId>validation-api</artifactId>
-<version>2.0.1.Final</version>
-</dependency>
-<dependency>
-<groupId>javax.xml.bind</groupId>
-<artifactId>jaxb-api</artifactId>
-<version>2.3.1</version>
-</dependency>
-<!--  Mail  -->
-<dependency>
-<groupId>org.springframework.boot</groupId>
-<artifactId>spring-boot-starter-mail</artifactId>
-<version>2.5.6</version>
-</dependency>
-<dependency>
-<groupId>org.springframework.boot</groupId>
-<artifactId>spring-boot-starter-test</artifactId>
-<scope>test</scope>
-</dependency>
-</dependencies>
-<build>
-<plugins>
-<plugin>
-<groupId>org.springframework.boot</groupId>
-<artifactId>spring-boot-maven-plugin</artifactId>
-</plugin>
-</plugins>
-<finalName>bookstore</finalName>
-</build>
-</project>
+package com.example.bookstore;
+
+import jakarta.persistence.*;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+import java.util.Optional;
+
+@SpringBootApplication
+public class BookStoreApplication {
+
+    public static void main(String[] args) {
+        SpringApplication.run(BookStoreApplication.class, args);
+    }
+}
+
+// Entity Class
+@Entity
+@Table(name = "books")
+class Book {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(nullable = false)
+    private String title;
+
+    @Column(nullable = false)
+    private String author;
+
+    @Column(nullable = false)
+    private Double price;
+
+    // Constructors
+    public Book() {}
+
+    public Book(String title, String author, Double price) {
+        this.title = title;
+        this.author = author;
+        this.price = price;
+    }
+
+    // Getters and Setters
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public String getTitle() {
+        return title;
+    }
+
+    public void setTitle(String title) {
+        this.title = title;
+    }
+
+    public String getAuthor() {
+        return author;
+    }
+
+    public void setAuthor(String author) {
+        this.author = author;
+    }
+
+    public Double getPrice() {
+        return price;
+    }
+
+    public void setPrice(Double price) {
+        this.price = price;
+    }
+}
+
+// Repository Interface
+@Repository
+interface BookRepository extends JpaRepository<Book, Long> {}
+
+// Service Interface
+interface BookService {
+    List<Book> getAllBooks();
+    Book getBookById(Long id);
+    Book createBook(Book book);
+    Book updateBook(Long id, Book bookDetails);
+    void deleteBook(Long id);
+}
+
+// Service Implementation
+@Service
+class BookServiceImpl implements BookService {
+
+    @Autowired
+    private BookRepository bookRepository;
+
+    @Override
+    public List<Book> getAllBooks() {
+        return bookRepository.findAll();
+    }
+
+    @Override
+    public Book getBookById(Long id) {
+        Optional<Book> book = bookRepository.findById(id);
+        return book.orElse(null);
+    }
+
+    @Override
+    public Book createBook(Book book) {
+        return bookRepository.save(book);
+    }
+
+    @Override
+    public Book updateBook(Long id, Book bookDetails) {
+        Book book = bookRepository.findById(id).orElse(null);
+        if (book != null) {
+            book.setTitle(bookDetails.getTitle());
+            book.setAuthor(bookDetails.getAuthor());
+            book.setPrice(bookDetails.getPrice());
+            return bookRepository.save(book);
+        }
+        return null;
+    }
+
+    @Override
+    public void deleteBook(Long id) {
+        bookRepository.deleteById(id);
+    }
+}
+
+// REST Controller
+@RestController
+@RequestMapping("/api/books")
+class BookController {
+
+    @Autowired
+    private BookService bookService;
+
+    @GetMapping
+    public List<Book> getAllBooks() {
+        return bookService.getAllBooks();
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<Book> getBookById(@PathVariable Long id) {
+        Book book = bookService.getBookById(id);
+        if (book != null) {
+            return ResponseEntity.ok(book);
+        } else {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    @PostMapping
+    public Book createBook(@RequestBody Book book) {
+        return bookService.createBook(book);
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<Book> updateBook(@PathVariable Long id, @RequestBody Book bookDetails) {
+        Book updatedBook = bookService.updateBook(id, bookDetails);
+        if (updatedBook != null) {
+            return ResponseEntity.ok(updatedBook);
+        } else {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteBook(@PathVariable Long id) {
+        bookService.deleteBook(id);
+        return ResponseEntity.noContent().build();
+    }
+}
